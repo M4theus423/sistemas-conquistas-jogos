@@ -1,0 +1,74 @@
+[
+  {
+    "value": "teste",
+    "checked": false
+  },
+  {
+    "id": 2,
+    "nome": "GTA 6",
+    "plataforma": "PC",
+    "genero": "Ação e Mundo Aberto",
+    "conquistas": [
+      {
+        "id": 1,
+        "titulo": "Bem Vindo a Vice City",
+        "descricao": "Chegue a Vice City pela Primeira vez",
+        "dificuldade": "fácil",
+        "desbloqueada": false,
+        "dataDesbloqueio": null,
+        "pontos": 20
+      },
+      {
+        "id": 2,
+        "titulo": "Bem Vindo a Vice City",
+        "descricao": "Chegue em Vice City",
+        "dificuldade": "fácil",
+        "desbloqueada": false,
+        "dataDesbloqueio": null,
+        "pontos": 50
+      },
+      {
+        "id": 3,
+        "titulo": "Rei de Leonida",
+        "descricao": "Conquiste Leonida",
+        "dificuldade": "média",
+        "desbloqueada": true,
+        "dataDesbloqueio": "02/10/2025",
+        "pontos": 12
+      },
+      {
+        "id": 4,
+        "titulo": "Rei do Crime",
+        "descricao": "Conquiste todo o crime de todos os estados",
+        "dificuldade": "difícil",
+        "desbloqueada": true,
+        "dataDesbloqueio": "02/10/2025",
+        "pontos": 50
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "nome": "GTA 6",
+    "plataforma": "PC",
+    "genero": "Ação",
+    "conquistas": [
+      {
+        "id": 1,
+        "titulo": "Prologo",
+        "descricao": "Comece o jogo",
+        "dificuldade": "fácil",
+        "desbloqueada": false,
+        "dataDesbloqueio": null,
+        "pontos": 12
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "nome": "RDR2",
+    "plataforma": "PC",
+    "genero": "Faroeste",
+    "conquistas": []
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "nome": "GTA 6",
+    "plataforma": "PC",
+    "genero": "Ação",
+    "conquistas": [
+      {
+        "id": 1,
+        "titulo": "Prólogo",
+        "descricao": "Chegue em GTA6",
+        "dificuldade": "fácil",
+        "desbloqueada": false,
+        "dataDesbloqueio": null,
+        "pontos": 12
+      },
+      {
+        "id": 2,
+        "titulo": "Rei",
+        "descricao": "Se torne rei",
+        "dificuldade": "difícil",
+        "desbloqueada": false,
+        "dataDesbloqueio": null,
+        "pontos": 34
+      },
+      {
+        "id": 3,
+        "titulo": "se torne rei",
+        "descricao": "oloko",
+        "dificuldade": "fácil",
+        "desbloqueada": false,
+        "dataDesbloqueio": null,
+        "pontos": 10
+      }
+    ]
+  }
+]
