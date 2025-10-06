@@ -6,8 +6,7 @@ Um Sistema de conquistas de jogos de diferentes plataformas.
 ## Funcionalidades
 - [ ] Cadastro de jogo
 - [ ] Adicionar Conquistas
-- [ ] Conquistas Desbloqueadas
-- [ ] Visualizar por jogo ou por Status
+- [ ] Visualizar conquistas por jogo
 - [ ] Estatísticas 
 - [ ] Ranking de jogos mais completados
 
