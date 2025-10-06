@@ -1,351 +1,326 @@
-import { select, input, checkbox } from "@inquirer/prompts";
-import fs from "fs/promises";
+const { select, input } = require('@inquirer/prompts');
+const fs = require('fs').promises;
+const path = require('path');
 
-// ===== Variáveis Globais =====
 let mensagem = "🎮 Bem-vindo ao Sistema de Conquistas!";
 let jogos = [];
 
-// ===== Helpers =====
-const toBool = (v) => {
-  if (typeof v === "boolean") return v;
-  if (typeof v === "number") return v === 1;
-  if (typeof v === "string") {
-    const s = v.trim().toLowerCase();
-    if (["true", "1", "yes", "y"].includes(s)) return true;
-    if (["false", "0", "no", "n"].includes(s)) return false;
-  }
-  return false;
-};
-
-const nextGameId = () => {
-  if (!Array.isArray(jogos) || jogos.length === 0) return 1;
-  const max = Math.max(...jogos.map((j) => Number(j.id) || 0));
-  return max + 1;
-};
-
-const nextConquistaId = (jogo) => {
-  const conquistas = Array.isArray(jogo.conquistas) ? jogo.conquistas : [];
-  if (conquistas.length === 0) return 1;
-  const max = Math.max(...conquistas.map((c) => Number(c.id) || 0));
-  return max + 1;
-};
-
 // ===== Persistência =====
 const carregarJogos = async () => {
-  try {
-    const dados = await fs.readFile("jogos.json", "utf-8");
-    const parsed = JSON.parse(dados);
-    if (!Array.isArray(parsed)) {
-      jogos = [];
-    } else {
-      jogos = parsed.map((jogo) => ({
-        id: jogo.id ?? nextGameId(),
-        nome: jogo.nome ?? "Sem nome",
-        plataforma: jogo.plataforma ?? "N/A",
-        genero: jogo.genero ?? "N/A",
-        conquistas: Array.isArray(jogo.conquistas)
-          ? jogo.conquistas.map((c) => ({
-              id: c?.id ?? null,
-              titulo: c?.titulo ?? "Sem título",
-              descricao: c?.descricao ?? "",
-              dificuldade: c?.dificuldade ?? "média",
-              desbloqueada: toBool(c?.desbloqueada),
-              dataDesbloqueio: c?.dataDesbloqueio ?? null,
-              pontos: Number(c?.pontos) || 0,
-            }))
-          : [],
-      }));
-
-      // garantir IDs únicos
-      jogos.forEach((j) => {
-        j.conquistas = j.conquistas.map((c, i) => ({
-          ...c,
-          id: c.id ?? i + 1,
-        }));
-      });
+    try {
+        const dados = await fs.readFile(path.join(__dirname, "jogos.json"), "utf-8");
+        jogos = JSON.parse(dados);
+    } catch {
+        jogos = [];
     }
-  } catch {
-    jogos = [];
-  }
 };
 
 const salvarJogos = async () => {
-  try {
-    await fs.writeFile("jogos.json", JSON.stringify(jogos, null, 2));
-  } catch (err) {
-    console.error("Erro ao salvar jogos.json:", err.message);
-  }
+    await fs.writeFile(path.join(__dirname, "jogos.json"), JSON.stringify(jogos, null, 2));
+};
+
+// ===== Funções auxiliares =====
+const toBool = (value) => {
+    return value === true || value === "true";
 };
 
 // ===== Funcionalidades =====
 
 // 1. Cadastrar jogo
 const cadastrarJogo = async () => {
-  const nome = (await input({ message: "Nome do jogo:" })) || "";
-  if (!nome.trim()) {
-    mensagem = "⚠️ O nome do jogo não pode ser vazio.";
-    return;
-  }
+    const nome = await input({ message: "Nome do jogo:" });
+    if (!nome.trim()) {
+        mensagem = "⚠️ O nome do jogo não pode ser vazio.";
+        return;
+    }
 
-  const plataforma = (await input({ message: "Plataforma:" })) || "N/A";
-  const genero = (await input({ message: "Gênero:" })) || "N/A";
+    const plataforma = await input({ message: "Plataforma:" });
+    const genero = await input({ message: "Gênero:" });
 
-  const jogo = {
-    id: nextGameId(),
-    nome: nome.trim(),
-    plataforma: plataforma.trim(),
-    genero: genero.trim(),
-    conquistas: [],
-  };
+    jogos.push({
+        id: jogos.length + 1,
+        nome,
+        plataforma,
+        genero,
+        conquistas: []
+    });
 
-  jogos.push(jogo);
-  mensagem = `🎮 Jogo "${jogo.nome}" cadastrado com sucesso!`;
+    mensagem = `🎮 Jogo "${nome}" cadastrado com sucesso!`;
 };
 
-// 2. Adicionar conquista
+// 2. Adicionar conquista por jogo
 const adicionarConquista = async () => {
-  if (jogos.length === 0) {
-    mensagem = "⚠️ Nenhum jogo cadastrado!";
-    return;
-  }
-
-  const jogoId = await select({
-    message: "Selecione o jogo:",
-    choices: jogos.map((j) => ({ name: `${j.nome} [${j.plataforma}]`, value: j.id })),
-  });
-
-  const jogo = jogos.find((j) => j.id === jogoId);
-  if (!jogo) return;
-
-  const titulo = (await input({ message: "Título da conquista:" })) || "";
-  if (!titulo.trim()) {
-    mensagem = "⚠️ O título não pode ser vazio.";
-    return;
-  }
-
-  const descricao = (await input({ message: "Descrição:" })) || "";
-  const dificuldade = await select({
-    message: "Dificuldade:",
-    choices: [
-      { name: "Fácil", value: "fácil" },
-      { name: "Média", value: "média" },
-      { name: "Difícil", value: "difícil" },
-    ],
-  });
-  const pontos = Number(await input({ message: "Pontos:" })) || 0;
-
-  const conquista = {
-    id: nextConquistaId(jogo),
-    titulo: titulo.trim(),
-    descricao: descricao.trim(),
-    dificuldade,
-    desbloqueada: false,
-    dataDesbloqueio: null,
-    pontos,
-  };
-
-  jogo.conquistas.push(conquista);
-  mensagem = `🏆 Conquista "${conquista.titulo}" adicionada ao jogo ${jogo.nome}!`;
-};
-
-// 3. Marcar conquista desbloqueada
-const desbloquearConquista = async () => {
-  if (jogos.length === 0) {
-    mensagem = "⚠️ Nenhum jogo cadastrado!";
-    return;
-  }
-
-  const jogoId = await select({
-    message: "Selecione o jogo:",
-    choices: jogos.map((j) => ({ name: `${j.nome} [${j.plataforma}]`, value: j.id })),
-  });
-
-  const jogo = jogos.find((j) => j.id === jogoId);
-  if (!jogo || jogo.conquistas.length === 0) {
-    mensagem = "⚠️ Este jogo não possui conquistas.";
-    return;
-  }
-
-  const escolhidas = await checkbox({
-    message: "Selecione conquistas para desbloquear:",
-    choices: jogo.conquistas.map((c) => ({
-      name: `${c.titulo} (${c.dificuldade}, ${c.pontos} pts)`,
-      value: c.id,
-      checked: toBool(c.desbloqueada),
-    })),
-  });
-
-  escolhidas.forEach((id) => {
-    const c = jogo.conquistas.find((x) => x.id === id);
-    if (c && !toBool(c.desbloqueada)) {
-      c.desbloqueada = true;
-      c.dataDesbloqueio = new Date().toLocaleString("pt-BR");
+    if (jogos.length === 0) {
+        mensagem = "⚠️ Nenhum jogo cadastrado!";
+        return;
     }
-  });
 
-  mensagem = "🏅 Conquista(s) desbloqueada(s)!";
-};
-
-// 4. Visualizar conquistas
-const visualizarConquistas = async () => {
-  if (jogos.length === 0) {
-    mensagem = "⚠️ Nenhum jogo cadastrado!";
-    return;
-  }
-
-  const modo = await select({
-    message: "Visualizar por:",
-    choices: [
-      { name: "Por jogo", value: "jogo" },
-      { name: "Por status", value: "status" },
-    ],
-  });
-
-  if (modo === "jogo") {
     const jogoId = await select({
-      message: "Selecione o jogo:",
-      choices: jogos.map((j) => ({ name: j.nome, value: j.id })),
+        message: "Selecione o jogo:",
+        choices: jogos.map(j => ({ name: j.nome, value: j.id }))
     });
 
-    const jogo = jogos.find((j) => j.id === jogoId);
-    console.clear();
-    console.log(`🎮 Conquistas de ${jogo.nome}:\n`);
+    const jogo = jogos.find(j => j.id === jogoId);
 
-    if (jogo.conquistas.length === 0) {
-      console.log("⚠️ Nenhuma conquista cadastrada.");
-    } else {
-      jogo.conquistas.forEach((c) => {
-        const statusStr = toBool(c.desbloqueada)
-          ? `✅ Desbloqueada em ${c.dataDesbloqueio}`
-          : "🔒 Pendente";
-        console.log(`🏅 ${c.titulo} (${c.pontos} pts) - ${statusStr}`);
-      });
+    const titulo = await input({ message: "Título da conquista:" });
+    if (!titulo.trim()) {
+        mensagem = "⚠️ O título não pode ser vazio.";
+        return;
     }
-  } else {
-    const status = await select({
-      message: "Filtrar por:",
-      choices: [
-        { name: "✅ Desbloqueadas", value: true },
-        { name: "❌ Pendentes", value: false },
-      ],
+
+    const descricao = await input({ message: "Descrição:" });
+    const dificuldade = await select({
+        message: "Dificuldade:",
+        choices: [
+            { name: "Fácil", value: "fácil" },
+            { name: "Média", value: "média" },
+            { name: "Difícil", value: "difícil" }
+        ]
+    });
+
+    let pontos;
+    while (true) {
+        const pontosInput = await input({ message: "Pontos (número):" });
+        pontos = parseInt(pontosInput);
+        if (!isNaN(pontos)) break;
+        console.log("⚠️ Por favor, insira um número válido para os pontos.");
+    }
+
+    jogo.conquistas.push({
+        id: jogo.conquistas.length + 1,
+        titulo,
+        descricao,
+        dificuldade,
+        desbloqueada: false,
+        dataDesbloqueio: null,
+        pontos
+    });
+
+    mensagem = `🏆 Conquista "${titulo}" adicionada ao jogo ${jogo.nome}!`;
+};
+
+// 3. Marcar conquista como desbloqueada com data
+const desbloquearConquista = async () => {
+    if (!Array.isArray(jogos) || jogos.length === 0) {
+        mensagem = "⚠️ Nenhum jogo cadastrado!";
+        return;
+    }
+
+    const jogoId = await select({
+        message: "Selecione o jogo:",
+        choices: jogos.map(j => ({ name: j.nome || "Sem nome", value: j.id }))
+    });
+
+    const jogo = jogos.find(j => j.id === jogoId);
+
+    if (!jogo) {
+        mensagem = "⚠️ Jogo não encontrado!";
+        return;
+    }
+
+    const conquistas = Array.isArray(jogo.conquistas) ? jogo.conquistas : [];
+
+    if (conquistas.length === 0) {
+        mensagem = "⚠️ Este jogo não possui conquistas.";
+        return;
+    }
+
+    const conquistaId = await select({
+        message: "Selecione a conquista para desbloquear:",
+        choices: conquistas.map(c => ({ name: c.titulo || "Sem título", value: c.id }))
+    });
+
+    const conquista = conquistas.find(c => c.id === conquistaId);
+
+    if (!conquista) {
+        mensagem = "⚠️ Conquista não encontrada!";
+        return;
+    }
+
+    if (conquista.desbloqueada) {
+        mensagem = "✅ Esta conquista já foi desbloqueada.";
+        return;
+    }
+
+    conquista.desbloqueada = true;
+    conquista.dataDesbloqueio = new Date().toLocaleDateString("pt-BR");
+
+    mensagem = `🏅 Conquista "${conquista.titulo}" desbloqueada com sucesso!`;
+};
+
+// 4. Visualizar conquistas de um jogo
+const visualizarConquistas = async () => {
+    if (jogos.length === 0) {
+        mensagem = "⚠️ Nenhum jogo cadastrado!";
+        return;
+    }
+
+    const jogoId = await select({
+        message: "Selecione o jogo:",
+        choices: jogos.map(j => ({ name: j.nome, value: j.id }))
+    });
+
+    const jogo = jogos.find(j => j.id === jogoId);
+
+    if (!jogo || jogo.conquistas.length === 0) {
+        mensagem = "⚠️ Este jogo não possui conquistas cadastradas.";
+        return;
+    }
+
+    console.clear();
+    console.log(`\n🎮 ${jogo.nome} - ${jogo.plataforma} (${jogo.genero})`);
+    console.log("━".repeat(60));
+    
+    jogo.conquistas.forEach(c => {
+        const status = c.desbloqueada ? "✅" : "🔒";
+        const data = c.desbloqueada ? ` [${c.dataDesbloqueio}]` : "";
+        console.log(`\n${status} ${c.titulo} - ${c.pontos} pts`);
+        console.log(`   ${c.descricao}`);
+        console.log(`   Dificuldade: ${c.dificuldade}${data}`);
+    });
+    
+    console.log("\n" + "━".repeat(60));
+    await input({ message: "\nPressione ENTER para continuar..." });
+};
+
+// 5. Estatísticas por jogo
+const estatisticas = async () => {
+    if (jogos.length === 0) {
+        mensagem = "⚠️ Nenhum jogo cadastrado!";
+        return;
+    }
+
+    const jogoId = await select({
+        message: "Selecione o jogo:",
+        choices: jogos.map(j => ({ name: j.nome, value: j.id }))
+    });
+
+    const jogo = jogos.find(j => j.id === jogoId);
+
+    if (!jogo) {
+        mensagem = "⚠️ Jogo não encontrado!";
+        return;
+    }
+
+    const total = jogo.conquistas.length;
+    const desbloqueadas = jogo.conquistas.filter(c => c.desbloqueada).length;
+    const percentual = total > 0 ? ((desbloqueadas / total) * 100).toFixed(1) : 0;
+    
+    const pontosGanhos = jogo.conquistas
+        .filter(c => c.desbloqueada)
+        .reduce((sum, c) => sum + c.pontos, 0);
+    
+    const pontosTotal = jogo.conquistas.reduce((sum, c) => sum + c.pontos, 0);
+
+    const porDificuldade = {
+        fácil: { total: 0, desbloqueadas: 0 },
+        média: { total: 0, desbloqueadas: 0 },
+        difícil: { total: 0, desbloqueadas: 0 }
+    };
+
+    jogo.conquistas.forEach(c => {
+        porDificuldade[c.dificuldade].total++;
+        if (c.desbloqueada) {
+            porDificuldade[c.dificuldade].desbloqueadas++;
+        }
     });
 
     console.clear();
-    console.log(`📌 Conquistas ${status ? "Desbloqueadas" : "Pendentes"}:\n`);
-
-    let encontrou = false;
-    jogos.forEach((jogo) => {
-      const filtradas = jogo.conquistas.filter((c) => toBool(c.desbloqueada) === status);
-      if (filtradas.length > 0) {
-        encontrou = true;
-        console.log(`🎮 ${jogo.nome}`);
-        filtradas.forEach((c) =>
-          console.log(`   - ${c.titulo} (${c.pontos} pts)`)
-        );
-      }
-    });
-
-    if (!encontrou) console.log("⚠️ Nenhuma encontrada.");
-  }
-
-  await input({ message: "ENTER para voltar ao menu:" });
+    console.log(`\n📊 Estatísticas - ${jogo.nome}`);
+    console.log("━".repeat(60));
+    console.log(`\n🎮 Progresso Geral:`);
+    console.log(`   Total de conquistas: ${total}`);
+    console.log(`   Desbloqueadas: ${desbloqueadas} (${percentual}%)`);
+    console.log(`   Pontos: ${pontosGanhos}/${pontosTotal}`);
+    
+    console.log(`\n📈 Por Dificuldade:`);
+    console.log(`   Fácil: ${porDificuldade.fácil.desbloqueadas}/${porDificuldade.fácil.total}`);
+    console.log(`   Média: ${porDificuldade.média.desbloqueadas}/${porDificuldade.média.total}`);
+    console.log(`   Difícil: ${porDificuldade.difícil.desbloqueadas}/${porDificuldade.difícil.total}`);
+    
+    console.log("\n" + "━".repeat(60));
+    await input({ message: "\nPressione ENTER para continuar..." });
 };
 
-// 5. Estatísticas
-const estatisticas = async () => {
-  console.clear();
-  console.log("📊 Estatísticas por jogo:\n");
-
-  jogos.forEach((jogo) => {
-    const total = jogo.conquistas.length;
-    const desbloq = jogo.conquistas.filter((c) => toBool(c.desbloqueada)).length;
-    const progresso = total > 0 ? ((desbloq / total) * 100).toFixed(2) : "0.00";
-
-    console.log(`🎮 ${jogo.nome} [${jogo.plataforma}]`);
-    console.log(`   Conquistas: ${desbloq}/${total} (${progresso}%)\n`);
-  });
-
-  await input({ message: "ENTER para voltar ao menu:" });
-};
-
-// 6. Ranking
+// 6. Ranking de jogos
 const ranking = async () => {
-  console.clear();
-  console.log("🏆 Ranking de Jogos:\n");
+    if (jogos.length === 0) {
+        mensagem = "⚠️ Nenhum jogo cadastrado!";
+        return;
+    }
 
-  const rank = [...jogos].sort((a, b) => {
-    const pa = a.conquistas.length
-      ? a.conquistas.filter((c) => toBool(c.desbloqueada)).length / a.conquistas.length
-      : 0;
-    const pb = b.conquistas.length
-      ? b.conquistas.filter((c) => toBool(c.desbloqueada)).length / b.conquistas.length
-      : 0;
-    return pb - pa;
-  });
+    const ranking = jogos.map(jogo => {
+        const total = jogo.conquistas.length;
+        const desbloqueadas = jogo.conquistas.filter(c => c.desbloqueada).length;
+        const percentual = total > 0 ? ((desbloqueadas / total) * 100).toFixed(1) : 0;
+        const pontosGanhos = jogo.conquistas
+            .filter(c => c.desbloqueada)
+            .reduce((sum, c) => sum + c.pontos, 0);
 
-  rank.forEach((j, i) => {
-    const total = j.conquistas.length;
-    const desbloq = j.conquistas.filter((c) => toBool(c.desbloqueada)).length;
-    const progresso = total > 0 ? ((desbloq / total) * 100).toFixed(2) : "0.00";
-    console.log(`${i + 1}º 🎮 ${j.nome} - ${desbloq}/${total} (${progresso}%)`);
-  });
+        return {
+            nome: jogo.nome,
+            total,
+            desbloqueadas,
+            percentual: parseFloat(percentual),
+            pontosGanhos
+        };
+    }).sort((a, b) => b.percentual - a.percentual || b.pontosGanhos - a.pontosGanhos);
 
-  await input({ message: "ENTER para voltar ao menu:" });
+    console.clear();
+    console.log("\n🏆 Ranking de Jogos");
+    console.log("━".repeat(60));
+    
+    ranking.forEach((jogo, index) => {
+        const posicao = index + 1;
+        const medalha = posicao === 1 ? "🥇" : posicao === 2 ? "🥈" : posicao === 3 ? "🥉" : `${posicao}º`;
+        console.log(`\n${medalha} ${jogo.nome}`);
+        console.log(`   Progresso: ${jogo.desbloqueadas}/${jogo.total} (${jogo.percentual}%)`);
+        console.log(`   Pontos: ${jogo.pontosGanhos}`);
+    });
+    
+    console.log("\n" + "━".repeat(60));
+    await input({ message: "\nPressione ENTER para continuar..." });
 };
 
 // ===== Sistema =====
 const mostrarMensagem = () => {
-  console.clear();
-  if (mensagem) {
-    console.log(mensagem + "\n");
-    mensagem = "";
-  }
+    console.clear();
+    if (mensagem) {
+        console.log(mensagem + "\n");
+        mensagem = "";
+    }
 };
 
 const start = async () => {
-  await carregarJogos();
+    await carregarJogos();
 
-  while (true) {
-    mostrarMensagem();
-    await salvarJogos();
+    while (true) {
+        mostrarMensagem();
+        await salvarJogos();
 
-    const opcao = await select({
-      message: "🎮 Menu >",
-      choices: [
-        { name: "Cadastrar jogo", value: "cadastrarJogo" },
-        { name: "Adicionar conquista", value: "adicionarConquista" },
-        { name: "Desbloquear conquista", value: "desbloquearConquista" },
-        { name: "Visualizar conquistas", value: "visualizar" },
-        { name: "Estatísticas por jogo", value: "estatisticas" },
-        { name: "Ranking de jogos", value: "ranking" },
-        { name: "Sair", value: "sair" },
-      ],
-    });
+        const opcao = await select({
+            message: "🎮 Menu >",
+            choices: [
+                { name: "Cadastrar jogo", value: "cadastrarJogo" },
+                { name: "Adicionar conquista", value: "adicionarConquista" },
+                { name: "Desbloquear conquista", value: "desbloquearConquista" },
+                { name: "Visualizar conquistas", value: "visualizar" },
+                { name: "Estatísticas por jogo", value: "estatisticas" },
+                { name: "Ranking de jogos", value: "ranking" },
+                { name: "Sair", value: "sair" }
+            ]
+        });
 
-    switch (opcao) {
-      case "cadastrarJogo":
-        await cadastrarJogo();
-        break;
-      case "adicionarConquista":
-        await adicionarConquista();
-        break;
-      case "desbloquearConquista":
-        await desbloquearConquista();
-        break;
-      case "visualizar":
-        await visualizarConquistas();
-        break;
-      case "estatisticas":
-        await estatisticas();
-        break;
-      case "ranking":
-        await ranking();
-        break;
-      case "sair":
-        console.log("👋 Até a próxima!");
-        return;
+        switch (opcao) {
+            case "cadastrarJogo": await cadastrarJogo(); break;
+            case "adicionarConquista": await adicionarConquista(); break;
+            case "desbloquearConquista": await desbloquearConquista(); break;
+            case "visualizar": await visualizarConquistas(); break;
+            case "estatisticas": await estatisticas(); break;
+            case "ranking": await ranking(); break;
+            case "sair": console.log("👋 Até a próxima!"); return;
+        }
     }
-  }
 };
 
 start();

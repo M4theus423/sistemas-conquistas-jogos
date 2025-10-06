@@ -10,8 +10,8 @@
         "titulo": "Prólogo",
         "descricao": "Chegue em GTA6",
         "dificuldade": "fácil",
-        "desbloqueada": false,
-        "dataDesbloqueio": null,
+        "desbloqueada": true,
+        "dataDesbloqueio": "06/10/2025",
         "pontos": 12
       },
       {
