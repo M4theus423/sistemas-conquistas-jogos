@@ -134,7 +134,7 @@ Contato:
 matheusfernando234567@gmail.com
 
 ## Link do Slide
-https://www.canva.com/design/DAG1DgTq6QQ/-1NZJC5E4RSQYinlAC4emg/edit?utm_content=DAG1DgTq6QQ&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+[https://www.canva.com/design/DAG1DgTq6QQ/-1NZJC5E4RSQYinlAC4emg/edit?utm_content=DAG1DgTq6QQ&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton](https://www.canva.com/design/DAG1DgTq6QQ/-1NZJC5E4RSQYinlAC4emg/edit?utm_content=DAG1DgTq6QQ&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
 ## Aprendizados
 Aprendi sobre o desenvolvimento de conquistas de jogos , além de aprender um pouco mais sobre como fazer os códigos além de também de sistemas que aprendi com a ajuda do chat GPT e também de exlicações que ele me deu , com os testes que eu fiz do sistema , todos deram certos e também com ajuda do chat GPT que me indicou alguns erros mas foram corrigidos
