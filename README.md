@@ -1,7 +1,7 @@
-# [Sistemas De Conquistas De Jogos de PC]
+# [Sistemas De Conquistas De Jogos da Rockstar Games]
 
 ## Descrição
-Um Sistema de conquistas de jogos de diferentes plataformas.
+Um Sistema de conquistas de jogos da Rockstar Games em diferentes plataformas.
 
 ## Funcionalidades
 - [ ] Cadastro de jogo
@@ -28,7 +28,7 @@ A estrutura de dados principal é:
 let jogos = [];
 
 
-Ou seja, temos um array chamado jogos, que armazena vários objetos — cada um representando um jogo.
+Ou seja, temos um array chamado jogos, que armazena vários objetos cada um representando um jogo.
 
 Cada jogo contém, por sua vez, outro array interno chamado conquistas, com objetos representando cada conquista.
 
@@ -65,12 +65,12 @@ jogos (Array)
 │
 ├── [0] Jogo
 │    ├── id: 1
-│    ├── nome: "The Witcher 3"
+│    ├── nome: "GTA 6"
 │    ├── plataforma: "PC"
-│    ├── genero: "RPG"
+│    ├── genero: "AÇÃO"
 │    └── conquistas (Array)
-│         ├── [0] { id: 1, titulo: "Caçador", desbloqueada: true, ... }
-│         └── [1] { id: 2, titulo: "Mago", desbloqueada: false, ... }
+│         ├── [0] { id: 1, titulo: "Jason Duvall", desbloqueada: true, ... }
+│         └── [1] { id: 2, titulo: "Lucia Caminos", desbloqueada: false, ... }
 │
 ├── [1] Jogo
 │    └── ...
@@ -89,18 +89,18 @@ salvarJogos() converte o array jogos de volta em JSON e grava no arquivo.
 [
   {
     "id": 1,
-    "nome": "The Witcher 3",
+    "nome": "GTA 6",
     "plataforma": "PC",
-    "genero": "RPG",
+    "genero": "Ação",
     "conquistas": [
       {
         "id": 1,
-        "titulo": "Caçador de Monstros",
-        "descricao": "Mate 10 monstros",
-        "dificuldade": "média",
+        "titulo": "Jason Duvall",
+        "descricao": "Jogue com Jason Duvall",
+        "dificuldade": "fácil",
         "desbloqueada": true,
         "dataDesbloqueio": "06/10/2025 15:42:00",
-        "pontos": 50
+        "pontos": 15
       }
     ]
   }
